@@ -1,0 +1,23 @@
+# name: test/sql/duckfs.test
+# description: test duckfs extension
+# group: [duckfs]
+
+# Before we load the extension, this will fail
+statement error
+SELECT duckfs('Sam');
+----
+Catalog Error: Scalar Function with name duckfs does not exist!
+
+# Require statement will ensure this test is run with this extension loaded
+require duckfs
+
+# Confirm the extension works
+query I
+SELECT duckfs('Sam');
+----
+Duckfs Sam 🐥
+
+query I
+SELECT duckfs_openssl_version('Michael') ILIKE 'Duckfs Michael, my linked OpenSSL version is OpenSSL%';
+----
+true
