@@ -8,9 +8,13 @@
 #include "duckdb/main/extension_util.hpp"
 #include <duckdb/parser/parsed_data/create_scalar_function_info.hpp>
 
-#include <filesystem>
+#include <boost/filesystem.hpp>
+#include <chrono>      // for std::chrono::duration_cast
+#include <ctime>  // for std::time_t
 
-namespace fs = std::__fs::filesystem;
+#include <iomanip>    // for std::fixed and std::setprecision
+
+namespace fs = boost::filesystem;
 
 namespace duckdb {
 
@@ -83,6 +87,7 @@ namespace duckdb {
         }
     };
 
+
     static void ListDirFun(ClientContext &context, TableFunctionInput &data_p, DataChunk &output) {
 
         // get the args
@@ -120,9 +125,8 @@ namespace duckdb {
 
             // Last modified time
             auto last_modified = fs::last_write_time(entry.path());
-            int64_t timestamp_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-                    last_modified.time_since_epoch()).count();
-            timestamp_t timestamp = Timestamp::FromEpochMs(timestamp_ms);
+            auto last_modified_int = static_cast<int64_t>(last_modified);
+            timestamp_t timestamp = Timestamp::FromEpochSeconds(last_modified_int);
             output.data[3].SetValue(count, Value::TIMESTAMP(timestamp));
 
             count++;

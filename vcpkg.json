@@ -1,5 +1,12 @@
 {
   "dependencies": [
-    "openssl"
-  ]
+    {
+      "name": "boost-filesystem"
+    },
+    {
+      "name": "openssl"
+    }
+  ],
+  "version": "0.0",
+  "name": "duckfs"
 }
