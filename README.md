@@ -11,7 +11,7 @@ This extension, Duckfs, allow you to browse the host filesystem from DuckDB.
 - `ls(path) [Table Function]`: List files in a directory, `path` is optional and defaults to the current directory.
 
 ## Examples
-```sql
+```plaintext
 D SELECT pwd();
 ┌──────────────────────────────────────────┐
 │                  pwd()                   │
@@ -20,16 +20,19 @@ D SELECT pwd();
 │ /Users/paul/workspace/duckFS/build/debug │
 └──────────────────────────────────────────┘
 ``` 
-```sql
-D SELECT path FROM ls('.') WHERE '.json' in path;
-┌─────────────────────────┐
-│          path           │
-│         varchar         │
-├─────────────────────────┤
-│ ./compile_commands.json │
-└─────────────────────────┘
+```plaintext
+D SELECT *, hsize(size) as hsize FROM ls() WHERE size != 0 ORDER BY last_modified DESC LIMIT 3;
+┌───────────────┬───────────┬───────────┬─────────────────────┬───────────┐
+│     path      │   size    │ file_type │    last_modified    │   hsize   │
+│    varchar    │   int64   │  varchar  │      timestamp      │  varchar  │
+├───────────────┼───────────┼───────────┼─────────────────────┼───────────┤
+│ ./duckdb      │ 471631560 │ file      │ 2024-10-20 18:16:04 │ 449.78 MB │
+│ ./.ninja_log  │     76821 │ file      │ 2024-10-20 18:16:04 │ 75.02 KB  │
+│ ./.ninja_deps │   2038000 │ file      │ 2024-10-20 18:15:48 │ 1.94 MB   │
+└───────────────┴───────────┴───────────┴─────────────────────┴───────────┘
+
 ``` 
-```sql
+```plaintext
 D SELECT path FROM ls('.') LIMIT 3;
 ┌──────────────┐
 │     path     │
