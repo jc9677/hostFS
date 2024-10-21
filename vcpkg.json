@@ -2,9 +2,6 @@
   "dependencies": [
     {
       "name": "boost-filesystem"
-    },
-    {
-      "name": "openssl"
     }
   ],
   "version": "0.0",

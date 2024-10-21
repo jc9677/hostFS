@@ -16,8 +16,3 @@ query I
 SELECT duckfs('Sam');
 ----
 Duckfs Sam 🐥
-
-query I
-SELECT duckfs_openssl_version('Michael') ILIKE 'Duckfs Michael, my linked OpenSSL version is OpenSSL%';
-----
-true
