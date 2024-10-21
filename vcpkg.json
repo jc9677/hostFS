@@ -1,9 +1,5 @@
 {
-  "dependencies": [
-    {
-      "name": "boost-filesystem"
-    }
-  ],
-  "version": "0.0",
+  "dependencies": ["boost-filesystem"],
+  "version": "0.1",
   "name": "duckfs"
 }

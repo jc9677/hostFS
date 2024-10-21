@@ -1,13 +1,10 @@
-# Duckfs
+# DuckFS
 
-This repository is based on https://github.com/duckdb/extension-template, check it out if you want to build and ship your own DuckDB extension.
-
----
-
-This extension, Duckfs, allow you to browse the host filesystem from DuckDB.
+DuckFS allows you to browse the host filesystem from DuckDB.
 
 ## Features
 - `pwd() [Scalar Function]`: Get the current working directory.
+- `cd(path) [Table Function]`: Change the current working directory.
 - `ls(path) [Table Function]`: List files in a directory, `path` is optional and defaults to the current directory.
 
 ## Examples
@@ -19,7 +16,16 @@ D SELECT pwd();
 ├──────────────────────────────────────────┤
 │ /Users/paul/workspace/duckFS/build/debug │
 └──────────────────────────────────────────┘
-``` 
+```
+```plaintext
+D PRAGMA cd('/Users/paul/workspace/duckpgq-experiments/scripts/pipeline');
+┌────────────────────────────────────────────────────────────┬─────────┐
+│                     current_directory                      │ success │
+│                          varchar                           │ boolean │
+├────────────────────────────────────────────────────────────┼─────────┤
+│ /Users/paul/workspace/duckpgq-experiments/scripts/pipeline │ true    │
+└────────────────────────────────────────────────────────────┴─────────┘
+```
 ```plaintext
 D SELECT *, hsize(size) as hsize FROM ls() WHERE size != 0 ORDER BY last_modified DESC LIMIT 3;
 ┌───────────────┬───────────┬───────────┬─────────────────────┬───────────┐
