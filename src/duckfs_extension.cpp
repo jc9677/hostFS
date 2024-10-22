@@ -14,63 +14,47 @@
 
 #include "third_party/filesystem.hpp"
 
-#include "table_functions/list_dir.hpp"
+#include "table_functions/list_dir_recursive.hpp"
 #include "table_functions/change_dir.hpp"
+
+#include "scalar_functions/file_utils.hpp"
+#include "scalar_functions/duckfs.hpp"
 
 namespace fs = ghc::filesystem;
 
 namespace duckdb {
 
-    inline void DuckfsScalarFun(DataChunk &args, ExpressionState &state, Vector &result) {
-        auto &name_vector = args.data[0];
-        UnaryExecutor::Execute<string_t, string_t>(
-                name_vector, result, args.size(),
-                [&](string_t name) {
-                    return StringVector::AddString(result, "Duckfs " + name.GetString() + " 🐥");;
-                });
-    }
-
-
-    static void PrintWorkingDirectoryFun(DataChunk &input, ExpressionState &state, Vector &result) {
-        // get the current working directory
-        auto cwd = fs::current_path();
-        auto val = Value(cwd.string());
-        result.Reference(val);
-    }
-
-    std::string HumanReadableSize(uint64_t size) {
-        constexpr uint64_t KB = 1024;
-        constexpr uint64_t MB = KB * 1024;
-        constexpr uint64_t GB = MB * 1024;
-
-        std::ostringstream oss;
-        if (size >= GB) {
-            oss << std::fixed << std::setprecision(2) << (double) size / GB << " GB";
-        } else if (size >= MB) {
-            oss << std::fixed << std::setprecision(2) << (double) size / MB << " MB";
-        } else if (size >= KB) {
-            oss << std::fixed << std::setprecision(2) << (double) size / KB << " KB";
-        } else {
-            oss << size << " B";
-        }
-        return oss.str();
-    }
-
-
-    static void HumanReadableSizeScalarFun(DataChunk &input, ExpressionState &state, Vector &result) {
-
-        auto &size_vector = input.data[0];
-        UnaryExecutor::Execute<int64_t, string_t>(
-                size_vector, result, input.size(),
-                [&](int64_t size) {
-                    return StringVector::AddString(result, HumanReadableSize(size));
-                });
-    }
-
-
     string PragmaChangeDir(ClientContext &context, const FunctionParameters &parameters) {
         return StringUtil::Format("SELECT * FROM cd(%s);",
                                   KeywordHelper::WriteQuoted(parameters.values[0].ToString(), '\''));
+    }
+
+    string PragmaPrintWorkingDirectory(ClientContext &context, const FunctionParameters &parameters) {
+        return "SELECT pwd();";
+    }
+
+    string PragmaLSDefault(ClientContext &context, const FunctionParameters &parameters) {
+        return "SELECT * FROM ls();";
+    }
+
+    string PragmaLSOneArg(ClientContext &context, const FunctionParameters &parameters) {
+        return StringUtil::Format("SELECT * FROM ls(%s);",
+                                  KeywordHelper::WriteQuoted(parameters.values[0].ToString(), '\''));
+    }
+
+    string PragmaLSRecursiveDefault(ClientContext &context, const FunctionParameters &parameters) {
+        return "SELECT * FROM lsr();";
+    }
+
+    string PragmaLSRecursiveOneArg(ClientContext &context, const FunctionParameters &parameters) {
+        return StringUtil::Format("SELECT * FROM lsr(%s);",
+                                  KeywordHelper::WriteQuoted(parameters.values[0].ToString(), '\''));
+    }
+
+    string PragmaLSRecursiveTwoArgs(ClientContext &context, const FunctionParameters &parameters) {
+        return StringUtil::Format("SELECT * FROM lsr(%s, %s);",
+                                  KeywordHelper::WriteQuoted(parameters.values[0].ToString(), '\''),
+                                  parameters.values[1].ToString());
     }
 
     static void LoadInternal(DatabaseInstance &instance) {
@@ -83,20 +67,77 @@ namespace duckdb {
         auto duckfs_pwd_function = ScalarFunction("pwd", {}, LogicalType::VARCHAR, PrintWorkingDirectoryFun);
         ExtensionUtil::RegisterFunction(instance, duckfs_pwd_function);
 
-        auto duckfs_human_readable_size_function = ScalarFunction("hsize", {LogicalType::BIGINT},
+        auto duckfs_human_readable_size_function = ScalarFunction("hsize", {LogicalType::HUGEINT},
                                                                   LogicalType::VARCHAR, HumanReadableSizeScalarFun);
         ExtensionUtil::RegisterFunction(instance, duckfs_human_readable_size_function);
+
+        auto duckfs_is_file_function = ScalarFunction("is_file", {LogicalType::VARCHAR}, LogicalType::BOOLEAN,
+                                                      IsFileScalarFun);
+        ExtensionUtil::RegisterFunction(instance, duckfs_is_file_function);
+
+        auto duckfs_is_dir_function = ScalarFunction("is_dir", {LogicalType::VARCHAR}, LogicalType::BOOLEAN,
+                                                     IsDirectoryScalarFun);
+        ExtensionUtil::RegisterFunction(instance, duckfs_is_dir_function);
+
+        auto duckfs_get_filename_function = ScalarFunction("file_name", {LogicalType::VARCHAR}, LogicalType::VARCHAR,
+                                                           GetFilenameScalarFun);
+        ExtensionUtil::RegisterFunction(instance, duckfs_get_filename_function);
+
+
+        auto duckfs_get_file_extension_function = ScalarFunction("file_extension", {LogicalType::VARCHAR},
+                                                                 LogicalType::VARCHAR,
+                                                                 GetFileExtensionScalarFun);
+        ExtensionUtil::RegisterFunction(instance, duckfs_get_file_extension_function);
+
+
+
+        auto duckfs_get_file_size_function = ScalarFunction("file_size", {LogicalType::VARCHAR}, LogicalType::UBIGINT,
+                                                            GetFileSizeScalarFun);
+        ExtensionUtil::RegisterFunction(instance, duckfs_get_file_size_function);
+
+
+        auto duckfs_get_path_absolute_function = ScalarFunction("absolute_path", {LogicalType::VARCHAR},
+                                                                LogicalType::VARCHAR,
+                                                                GetPathAbsoluteScalarFun);
+        ExtensionUtil::RegisterFunction(instance, duckfs_get_path_absolute_function);
+
+
+        auto duckfs_get_path_exists_function = ScalarFunction("path_exists", {LogicalType::VARCHAR},
+                                                              LogicalType::BOOLEAN,
+                                                              GetPathExistsScalarFun);
+        ExtensionUtil::RegisterFunction(instance, duckfs_get_path_exists_function);
+
+        auto duckfs_get_path_type_function = ScalarFunction("path_type", {LogicalType::VARCHAR}, LogicalType::VARCHAR,
+                                                            GetPathTypeScalarFun);
+        ExtensionUtil::RegisterFunction(instance, duckfs_get_path_type_function);
+
+
 
         // Register table functions
         TableFunctionSet list_dir_set("ls");
 
-        TableFunction list_dir_default({}, ListDirFun, ListDirBind, ListDirState::Init);
+        TableFunction list_dir_default({}, ListDirRecursiveFun, ListDirBind, ListDirRecursiveState::Init);
         list_dir_set.AddFunction(list_dir_default);
 
-        TableFunction list_dir({LogicalType::VARCHAR}, ListDirFun, ListDirBind, ListDirState::Init);
-        list_dir_set.AddFunction(list_dir);
+        TableFunction list_dir_one_arg({LogicalType::VARCHAR}, ListDirRecursiveFun, ListDirBind, ListDirRecursiveState::Init);
+        list_dir_set.AddFunction(list_dir_one_arg);
 
         ExtensionUtil::RegisterFunction(instance, list_dir_set);
+
+
+        TableFunctionSet list_dir_recursive_set("lsr");
+
+        TableFunction list_dir_recursive_default({}, ListDirRecursiveFun, ListDirRecursiveBind, ListDirRecursiveState::Init);
+        list_dir_recursive_set.AddFunction(list_dir_recursive_default);
+
+        TableFunction list_dir_recursive_one_arg({LogicalType::VARCHAR}, ListDirRecursiveFun, ListDirRecursiveBind, ListDirRecursiveState::Init);
+        list_dir_recursive_set.AddFunction(list_dir_recursive_one_arg);
+
+        TableFunction list_dir_recursive_two_args({LogicalType::VARCHAR, LogicalType::INTEGER}, ListDirRecursiveFun, ListDirRecursiveBind, ListDirRecursiveState::Init);
+        list_dir_recursive_set.AddFunction(list_dir_recursive_two_args);
+
+        ExtensionUtil::RegisterFunction(instance, list_dir_recursive_set);
+
 
         TableFunction change_dir("cd", {LogicalType::VARCHAR}, ChangeDirFun, ChangeDirBind, ChangeDirState::Init);
         ExtensionUtil::RegisterFunction(instance, change_dir);
@@ -105,6 +146,32 @@ namespace duckdb {
 
         PragmaFunction cd = PragmaFunction::PragmaCall("cd", PragmaChangeDir, {LogicalType::VARCHAR});
         ExtensionUtil::RegisterFunction(instance, cd);
+
+        PragmaFunction pwd = PragmaFunction::PragmaCall("pwd", PragmaPrintWorkingDirectory, {});
+        ExtensionUtil::RegisterFunction(instance, pwd);
+
+
+        PragmaFunctionSet ls_set("ls");
+        PragmaFunction ls_default = PragmaFunction::PragmaCall("ls", PragmaLSDefault, {});
+        PragmaFunction ls_one_arg = PragmaFunction::PragmaCall("ls", PragmaLSOneArg, {LogicalType::VARCHAR});
+
+        ls_set.AddFunction(ls_default);
+        ls_set.AddFunction(ls_one_arg);
+
+        ExtensionUtil::RegisterFunction(instance, ls_set);
+
+
+        PragmaFunctionSet lsr_set("lsr");
+
+        PragmaFunction lsr_default = PragmaFunction::PragmaCall("lsr", PragmaLSRecursiveDefault, {});
+        PragmaFunction lsr_one_arg = PragmaFunction::PragmaCall("lsr", PragmaLSRecursiveOneArg, {LogicalType::VARCHAR});
+        PragmaFunction lsr_two_args = PragmaFunction::PragmaCall("lsr", PragmaLSRecursiveTwoArgs, {LogicalType::VARCHAR, LogicalType::INTEGER});
+
+        lsr_set.AddFunction(lsr_default);
+        lsr_set.AddFunction(lsr_one_arg);
+        lsr_set.AddFunction(lsr_two_args);
+
+        ExtensionUtil::RegisterFunction(instance, lsr_set);
     }
 
     void DuckfsExtension::Load(DuckDB &db) {

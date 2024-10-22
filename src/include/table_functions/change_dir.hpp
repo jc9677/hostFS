@@ -55,8 +55,11 @@ namespace duckdb {
         // change the current working directory
         fs::current_path(path);
 
+        // get current absolute path
+        auto cwd = fs::current_path();
+
         // set the output
-        output.SetValue(0, 0, Value(path));
+        output.SetValue(0, 0, Value(cwd.string()));
         output.SetValue(1, 0, Value(true));
 
         output.SetCardinality(1);

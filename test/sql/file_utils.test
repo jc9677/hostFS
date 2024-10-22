@@ -1,0 +1,36 @@
+# name: test/sql/file_utils.test
+# description: test duckfs extension file utils
+# group: [duckfs]
+
+require duckfs
+
+query I
+SELECT hsize(1000)
+----
+1000 B
+
+statement ok
+SELECT path, is_file(path) AS type FROM lsr();
+
+statement ok
+SELECT path, is_dir(path) AS type FROM lsr();
+
+statement ok
+SELECT path, file_name(path) AS type FROM lsr();
+
+statement ok
+SELECT path, file_extension(path) AS type FROM lsr();
+
+statement ok
+SELECT path, file_size(path) AS type FROM lsr();
+
+statement ok
+SELECT path, absolute_path(path) AS type FROM lsr();
+
+statement ok
+SELECT path, path_exists(path) AS type FROM lsr();
+
+statement ok
+SELECT path, path_type(path) AS type FROM lsr();
+
+

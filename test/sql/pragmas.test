@@ -1,0 +1,27 @@
+# name: test/sql/pragmas.test
+# description: test duckfs extension pragmas
+# group: [duckfs]
+
+require duckfs
+
+statement ok
+PRAGMA pwd;
+
+statement ok
+PRAGMA cd('.');
+
+statement ok
+PRAGMA ls;
+
+statement ok
+PRAGMA ls('.');
+
+statement ok
+PRAGMA lsr;
+
+statement ok
+PRAGMA lsr('.');
+
+statement ok
+PRAGMA lsr('.', 3);
+

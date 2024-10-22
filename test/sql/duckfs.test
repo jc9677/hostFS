@@ -4,15 +4,13 @@
 
 # Before we load the extension, this will fail
 statement error
-SELECT duckfs('Sam');
+SELECT pwd();
 ----
-Catalog Error: Scalar Function with name duckfs does not exist!
+Catalog Error: Scalar Function with name pwd does not exist!
 
 # Require statement will ensure this test is run with this extension loaded
 require duckfs
 
 # Confirm the extension works
-query I
-SELECT duckfs('Sam');
-----
-Duckfs Sam 🐥
+statement ok
+SELECT pwd();
