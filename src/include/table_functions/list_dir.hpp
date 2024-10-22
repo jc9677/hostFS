@@ -9,13 +9,12 @@
 #include "duckdb/main/extension_util.hpp"
 #include <duckdb/parser/parsed_data/create_scalar_function_info.hpp>
 
-#include <boost/filesystem.hpp>
 #include <chrono>      // for std::chrono::duration_cast
 #include <ctime>  // for std::time_t
 
 #include <iomanip>    // for std::fixed and std::setprecision
 
-namespace fs = boost::filesystem;
+namespace fs = ghc::filesystem;
 
 
 namespace duckdb {
@@ -79,8 +78,8 @@ namespace duckdb {
             output.data[2].SetValue(count, Value(file_type));
 
             // Last modified time
-            auto last_modified = fs::last_write_time(entry.path());
-            auto last_modified_int = static_cast<int64_t>(last_modified);
+            auto last_modified_time_point = fs::last_write_time(entry.path());
+            auto last_modified_int = std::chrono::duration_cast<std::chrono::seconds>(last_modified_time_point.time_since_epoch()).count();
             timestamp_t timestamp = Timestamp::FromEpochSeconds(last_modified_int);
             output.data[3].SetValue(count, Value::TIMESTAMP(timestamp));
 

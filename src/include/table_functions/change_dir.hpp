@@ -9,14 +9,12 @@
 #include "duckdb/main/extension_util.hpp"
 #include <duckdb/parser/parsed_data/create_scalar_function_info.hpp>
 
-#include <boost/filesystem.hpp>
 #include <chrono>      // for std::chrono::duration_cast
 #include <ctime>  // for std::time_t
 
 #include <iomanip>    // for std::fixed and std::setprecision
 
-namespace fs = boost::filesystem;
-
+namespace fs = ghc::filesystem;
 
 namespace duckdb {
     struct ChangeDirFunctionData final : FunctionData {

@@ -8,17 +8,16 @@
 #include "duckdb/main/extension_util.hpp"
 
 #include <duckdb/parser/parsed_data/create_scalar_function_info.hpp>
+#include <chrono>       // for std::chrono::duration_cast
+#include <ctime>        // for std::time_t
+#include <iomanip>      // for std::fixed and std::setprecision
+
+#include "third_party/filesystem.hpp"
 
 #include "table_functions/list_dir.hpp"
 #include "table_functions/change_dir.hpp"
 
-#include <boost/filesystem.hpp>
-#include <chrono>      // for std::chrono::duration_cast
-#include <ctime>  // for std::time_t
-
-#include <iomanip>    // for std::fixed and std::setprecision
-
-namespace fs = boost::filesystem;
+namespace fs = ghc::filesystem;
 
 namespace duckdb {
 
