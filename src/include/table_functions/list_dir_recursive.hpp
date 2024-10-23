@@ -120,7 +120,7 @@ namespace duckdb {
         // we can max return STANDARD_VECTOR_SIZE paths at a time
         idx_t total_count = state.paths.size();
         idx_t remaining_count = total_count - state.current_idx;
-        idx_t count = std::min((idx_t)STANDARD_VECTOR_SIZE, remaining_count);
+        idx_t count = std::min<idx_t>(STANDARD_VECTOR_SIZE, remaining_count);
 
         // set up the chunk
         output.SetCardinality(count);
