@@ -1,3 +1,6 @@
+
+<img src="https://github.com/user-attachments/assets/fa806574-9120-474f-8cb4-b17b1fbc3cd1" width=250 />
+
 # DuckFS
 
 DuckFS allows you to navigate and explore the host filesystem from DuckDB.
