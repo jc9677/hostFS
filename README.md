@@ -1,55 +1,59 @@
 # DuckFS
 
-DuckFS allows you to browse the host filesystem from DuckDB.
+DuckFS allows you to navigate and explore the host filesystem from DuckDB.
+
+Example 1: Navivate to the workspace and list the files.
+```plaintext
+D PRAGMA cd('/Users/paul/workspace');
+D PRAGMA ls;
+┌───────────────────────────────┐
+│             path              │
+│            varchar            │
+├───────────────────────────────┤
+│ ./duckdb                      │
+│ ./playground                  │
+│ ./duckfs                      │
+...
+```
+
+
+Example 2: Get the top 3 largest file types in the workspace.
+```plaintext
+D SELECT size, count, file_extension AS "type"
+  FROM (
+      SELECT SUM(file_size(path)) AS size_raw, hsize(size_raw) AS size, COUNT(*) AS count, file_extension(path) AS file_extension
+      FROM lsr('/Users/paul/workspace', 10)
+      GROUP BY file_extension(path)
+  ) AS subquery
+  ORDER BY size_raw DESC
+  LIMIT 3;
+┌───────────┬───────┬─────────┐
+│ formatted │ count │  type   │
+│  varchar  │ int64 │ varchar │
+├───────────┼───────┼─────────┤
+│ 246.95 GB │    29 │ .duckdb │
+│ 90.33 GB  │  3776 │ .tmp    │
+│ 26.17 GB  │ 28175 │ .csv    │
+└───────────┴───────┴─────────┘
+```
 
 ## Features
-- `pwd() [Scalar Function]`: Get the current working directory.
-- `cd(path) [Table Function]`: Change the current working directory.
-- `ls(path) [Table Function]`: List files in a directory, `path` is optional and defaults to the current directory.
 
-## Examples
-```plaintext
-D SELECT pwd();
-┌──────────────────────────────────────────┐
-│                  pwd()                   │
-│                 varchar                  │
-├──────────────────────────────────────────┤
-│ /Users/paul/workspace/duckFS/build/debug │
-└──────────────────────────────────────────┘
-```
-```plaintext
-D PRAGMA cd('/Users/paul/workspace/duckpgq-experiments/scripts/pipeline');
-┌────────────────────────────────────────────────────────────┬─────────┐
-│                     current_directory                      │ success │
-│                          varchar                           │ boolean │
-├────────────────────────────────────────────────────────────┼─────────┤
-│ /Users/paul/workspace/duckpgq-experiments/scripts/pipeline │ true    │
-└────────────────────────────────────────────────────────────┴─────────┘
-```
-```plaintext
-D SELECT *, hsize(size) as hsize FROM ls() WHERE size != 0 ORDER BY last_modified DESC LIMIT 3;
-┌───────────────┬───────────┬───────────┬─────────────────────┬───────────┐
-│     path      │   size    │ file_type │    last_modified    │   hsize   │
-│    varchar    │   int64   │  varchar  │      timestamp      │  varchar  │
-├───────────────┼───────────┼───────────┼─────────────────────┼───────────┤
-│ ./duckdb      │ 471631560 │ file      │ 2024-10-20 18:16:04 │ 449.78 MB │
-│ ./.ninja_log  │     76821 │ file      │ 2024-10-20 18:16:04 │ 75.02 KB  │
-│ ./.ninja_deps │   2038000 │ file      │ 2024-10-20 18:15:48 │ 1.94 MB   │
-└───────────────┴───────────┴───────────┴─────────────────────┴───────────┘
-
-``` 
-```plaintext
-D SELECT path FROM ls('.') LIMIT 3;
-┌──────────────┐
-│     path     │
-│   varchar    │
-├──────────────┤
-│ ./repository │
-│ ./tools      │
-│ ./extension  │
-└──────────────┘
-```
-
+| Function                 | Description                                                                            | Parameters                                                                                     | Type              |
+|--------------------------|----------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------|-------------------|
+| `pwd()`                  | Get the current working directory.                                                      | None                                                                                           | Scalar Function    |
+| `cd(path)`               | Change the current working directory.                                                   | `path`: Target directory path (String)                                                          | Table Function     |
+| `ls(path)`               | List files in a directory. Defaults to the current directory if `path` is not provided. | `path` (optional): Directory path (String)                                                      | Table Function     |
+| `lsr(path, depth)`       | List files in a directory recursively. Defaults to the current directory and no limit.  | `path` (optional): Directory path (String) <br> `depth` (optional): Recursion depth, default is -1 (no limit) | Table Function     |
+| `is_file(path)`          | Check if the path is a file.                                                            | `path`: File path (String)                                                                      | Scalar Function    |
+| `is_dir(path)`           | Check if the path is a directory.                                                       | `path`: Directory path (String)                                                                 | Scalar Function    |
+| `file_name(path)`        | Get the file name from the path.                                                        | `path`: File path (String)                                                                      | Scalar Function    |
+| `file_extension(path)`   | Get the file extension from the path.                                                   | `path`: File path (String)                                                                      | Scalar Function    |
+| `file_size(path)`        | Get the size of the file.                                                               | `path`: File path (String)                                                                      | Scalar Function    |
+| `absolute_path(path)`    | Get the absolute path of the file.                                                      | `path`: File path (String)                                                                      | Scalar Function    |
+| `path_exists(path)`      | Check if the path exists.                                                               | `path`: File or directory path (String)                                                         | Scalar Function    |
+| `path_type(path)`        | Get the type of the path (file or directory).                                           | `path`: File or directory path (String)                                                         | Scalar Function    |
+| `hsize(bytes)`           | Format file size in human-readable form.                                                | `bytes`: Number of bytes (Integer)                                                              | Scalar Function    |
 
 ## Building
 ### Managing dependencies
