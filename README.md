@@ -18,9 +18,7 @@ D PRAGMA ls;
 │ ./duckfs                      │
 ...
 ```
-
-
-Example 2: Get the top 3 largest file types in the workspace.
+Example 2: List the top 3 file types by total size, with file count, ordered by size.
 ```plaintext
 D SELECT size, count, file_extension AS "type"
   FROM (
@@ -31,7 +29,7 @@ D SELECT size, count, file_extension AS "type"
   ORDER BY size_raw DESC
   LIMIT 3;
 ┌───────────┬───────┬─────────┐
-│ formatted │ count │  type   │
+│   size    │ count │  type   │
 │  varchar  │ int64 │ varchar │
 ├───────────┼───────┼─────────┤
 │ 246.95 GB │    29 │ .duckdb │
