@@ -111,7 +111,10 @@ namespace duckdb {
                                                             GetPathTypeScalarFun);
         ExtensionUtil::RegisterFunction(instance, duckfs_get_path_type_function);
 
+        auto duckfs_last_modified_function = ScalarFunction("file_last_modified", {LogicalType::VARCHAR}, LogicalType::TIMESTAMP,
+                                                            GetFileLastModifiedScalarFun);
 
+        ExtensionUtil::RegisterFunction(instance, duckfs_last_modified_function);
 
         // Register table functions
         TableFunctionSet list_dir_set("ls");

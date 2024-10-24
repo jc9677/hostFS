@@ -140,5 +140,31 @@ namespace duckdb {
                 });
     }
 
+    // date related functions
+
+    static void GetFileLastModifiedScalarFun(DataChunk &input, ExpressionState &state, Vector &result) {
+        auto &path_vector = input.data[0];
+
+        UnaryExecutor::ExecuteWithNulls<string_t, timestamp_t>(
+                path_vector, result, input.size(),
+                [&](string_t path, ValidityMask &mask, idx_t idx) {
+                    auto resolved_path = path.GetString();
+
+                    // if the path does not exist, return NULL
+                    if (!fs::exists(resolved_path)) {
+                        mask.SetInvalid(idx);
+                        return Timestamp::FromEpochSeconds(0);
+                    }
+
+                    // Get the last modified time of the (possibly resolved) path
+                    auto last_modified_time_point = fs::last_write_time(resolved_path);
+                    auto last_modified_int = std::chrono::duration_cast<std::chrono::seconds>(
+                            last_modified_time_point.time_since_epoch()).count();
+                    timestamp_t timestamp = Timestamp::FromEpochSeconds(last_modified_int);
+                    return timestamp;
+
+                });
+    }
+
 
 }

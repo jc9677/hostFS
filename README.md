@@ -2,7 +2,6 @@
 <img src="https://github.com/user-attachments/assets/fa806574-9120-474f-8cb4-b17b1fbc3cd1" width=250 />
 
 # DuckFS
-
 DuckFS allows you to navigate and explore the host filesystem from DuckDB.
 
 Example 1: Navivate to the workspace and list the files.
@@ -37,6 +36,26 @@ D SELECT size, count, file_extension AS "type"
 │ 26.17 GB  │ 28175 │ .csv    │
 └───────────┴───────┴─────────┘
 ```
+Example 3: Find the files you were working on last to continue your analysis.
+```plaintext
+D SELECT path, file_last_modified(path) AS date FROM ls() WHERE 'csv' IN file_extension(path) ORDER BY date LIMIT 1 ;
+┌───────────────────────────┬─────────────────────┐
+│           path            │        date         │
+│          varchar          │      timestamp      │
+├───────────────────────────┼─────────────────────┤
+│ ./sketch_results_join.csv │ 2024-07-13 23:25:48 │
+└───────────────────────────┴─────────────────────┘
+D SELECT n_rows, std, n_duplicates FROM './sketch_results.csv' LIMIT 4;
+┌────────┬────────────────────┬────────────────────┐
+│ n_rows │        std         │    n_duplicates    │
+│ int64  │       double       │       double       │
+├────────┼────────────────────┼────────────────────┤
+│   1000 │ 26.855167100578615 │ 1.0405827263267429 │
+│   1000 │  44.76159067772279 │ 1.1547344110854503 │
+│   1000 │ 31.675858315126995 │ 1.5649452269170578 │
+│   1000 │  52.60798418491246 │ 3.1545741324921135 │
+└────────┴────────────────────┴────────────────────┘
+```
 
 ## Features
 
@@ -51,6 +70,7 @@ D SELECT size, count, file_extension AS "type"
 | `file_name(path)`        | Get the file name from the path.                                                        | `path`: File path (String)                                                                      | Scalar Function    |
 | `file_extension(path)`   | Get the file extension from the path.                                                   | `path`: File path (String)                                                                      | Scalar Function    |
 | `file_size(path)`        | Get the size of the file.                                                               | `path`: File path (String)                                                                      | Scalar Function    |
+| `file_last_modified(path)`| Get the last modified time of the file.                                                | `path`: File path (String)                                                                      | Scalar Function    |
 | `absolute_path(path)`    | Get the absolute path of the file.                                                      | `path`: File path (String)                                                                      | Scalar Function    |
 | `path_exists(path)`      | Check if the path exists.                                                               | `path`: File or directory path (String)                                                         | Scalar Function    |
 | `path_type(path)`        | Get the type of the path (file or directory).                                           | `path`: File or directory path (String)                                                         | Scalar Function    |

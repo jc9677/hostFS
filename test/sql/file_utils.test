@@ -25,6 +25,9 @@ statement ok
 SELECT path, file_size(path) AS type FROM lsr();
 
 statement ok
+SELECT path, file_last_modified(path) AS type FROM lsr();
+
+statement ok
 SELECT path, absolute_path(path) AS type FROM lsr();
 
 statement ok
@@ -32,5 +35,7 @@ SELECT path, path_exists(path) AS type FROM lsr();
 
 statement ok
 SELECT path, path_type(path) AS type FROM lsr();
+
+
 
 
