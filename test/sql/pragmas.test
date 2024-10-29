@@ -1,8 +1,8 @@
 # name: test/sql/pragmas.test
-# description: test duckfs extension pragmas
-# group: [duckfs]
+# description: test hostfs extension pragmas
+# group: [hostfs]
 
-require duckfs
+require hostfs
 
 statement ok
 PRAGMA pwd;

@@ -1,8 +1,8 @@
 
 <img src="https://github.com/user-attachments/assets/fa806574-9120-474f-8cb4-b17b1fbc3cd1" width=250 />
 
-# DuckFS
-DuckFS allows you to navigate and explore the host filesystem from DuckDB.
+# HostFS
+HostFS allows you to navigate and explore the host filesystem from DuckDB.
 
 Example 1: Navigate to the workspace and list the files.
 ```plaintext
@@ -14,7 +14,7 @@ D PRAGMA ls;
 ├───────────────────────────────┤
 │ ./duckdb                      │
 │ ./playground                  │
-│ ./duckfs                      │
+│ ./hostfs                      │
 ...
 ```
 Example 2: List the top 3 file types by total size, with file count, ordered by size.
@@ -87,23 +87,23 @@ The main binaries that will be built are:
 ```sh
 ./build/release/duckdb
 ./build/release/test/unittest
-./build/release/extension/duckfs/duckfs.duckdb_extension
+./build/release/extension/hostfs/hostfs.duckdb_extension
 ```
 - `duckdb` is the binary for the duckdb shell with the extension code automatically loaded.
 - `unittest` is the test runner of duckdb. Again, the extension is already linked into the binary.
-- `duckfs.duckdb_extension` is the loadable binary as it would be distributed.
+- `hostfs.duckdb_extension` is the loadable binary as it would be distributed.
 
 ## Running the extension
 To run the extension code, simply start the shell with `./build/release/duckdb`.
 
-Now we can use the features from the extension directly in DuckDB. The template contains a single scalar function `duckfs()` that takes a string arguments and returns a string:
+Now we can use the features from the extension directly in DuckDB. The template contains a single scalar function `hostfs()` that takes a string arguments and returns a string:
 ```
-D select duckfs('Jane') as result;
+D select hostfs('Jane') as result;
 ┌────────────────┐
 │     result     │
 │    varchar     │
 ├────────────────┤
-│ Duckfs Jane 🐥 │
+│ Hostfs Jane 🐥 │
 └────────────────┘
 ```
 
@@ -142,6 +142,6 @@ DuckDB. To specify a specific version, you can pass the version instead.
 
 After running these steps, you can install and load your extension using the regular INSTALL/LOAD commands in DuckDB:
 ```sql
-INSTALL duckfs
-LOAD duckfs
+INSTALL hostfs
+LOAD hostfs
 ```

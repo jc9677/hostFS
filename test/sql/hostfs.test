@@ -1,6 +1,6 @@
-# name: test/sql/duckfs.test
-# description: test duckfs extension
-# group: [duckfs]
+# name: test/sql/hostfs.test
+# description: test hostfs extension
+# group: [hostfs]
 
 # Before we load the extension, this will fail
 statement error
@@ -9,7 +9,7 @@ SELECT pwd();
 Catalog Error: Scalar Function with name pwd does not exist!
 
 # Require statement will ensure this test is run with this extension loaded
-require duckfs
+require hostfs
 
 # Confirm the extension works
 statement ok

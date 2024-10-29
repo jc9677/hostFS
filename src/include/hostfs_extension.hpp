@@ -4,7 +4,7 @@
 
 namespace duckdb {
 
-class DuckfsExtension : public Extension {
+class HostfsExtension : public Extension {
 public:
 	void Load(DuckDB &db) override;
 	std::string Name() override;
