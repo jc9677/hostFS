@@ -68,7 +68,12 @@ namespace duckdb {
         UnaryExecutor::Execute<string_t, string_t>(
                 path_vector, result, input.size(),
                 [&](string_t path) {
-                    return StringVector::AddString(result, fs::path(path.GetString()).extension().string());
+                    std::string path_str = path.GetString();
+                    if (fs::is_directory(path_str)) {
+                        return StringVector::AddString(result, "");
+                    }else{
+                        return StringVector::AddString(result, fs::path(path_str).extension().string());
+                    }
                 });
     }
 
