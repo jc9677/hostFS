@@ -4,6 +4,12 @@
 # HostFS
 HostFS allows you to navigate and explore the host filesystem from DuckDB.
 
+Install via 
+```plaintext
+INSTALL hostfs FROM community;
+LOAD hostfs;
+```
+
 Example 1: Navigate to the workspace and list the files.
 ```plaintext
 D PRAGMA cd('/Users/paul/workspace');
