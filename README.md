@@ -57,25 +57,33 @@ D SELECT n_rows, std, n_duplicates FROM './sketch_results.csv' LIMIT 4;
 └────────┴────────────────────┴────────────────────┘
 ```
 
-## Features
+## Functions Overview
 
-| Function                 | Description                                                                            | Parameters                                                                                     | Type              |
-|--------------------------|----------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------|-------------------|
-| `pwd()`                  | Get the current working directory.                                                      | None                                                                                           | Scalar Function    |
-| `cd(path)`               | Change the current working directory.                                                   | `path`: Target directory path (String)                                                          | Table Function     |
-| `ls(path)`               | List files in a directory. Defaults to the current directory if `path` is not provided. | `path` (optional): Directory path (String)                                                      | Table Function     |
-| `lsr(path, depth)`       | List files in a directory recursively. Defaults to the current directory and no limit.  | `path` (optional): Directory path (String) <br> `depth` (optional): Recursion depth, default is -1 (no limit) | Table Function     |
-| `is_file(path)`          | Check if the path is a file.                                                            | `path`: File path (String)                                                                      | Scalar Function    |
-| `is_dir(path)`           | Check if the path is a directory.                                                       | `path`: Directory path (String)                                                                 | Scalar Function    |
-| `file_name(path)`        | Get the file name from the path.                                                        | `path`: File path (String)                                                                      | Scalar Function    |
-| `file_extension(path)`   | Get the file extension from the path.                                                   | `path`: File path (String)                                                                      | Scalar Function    |
-| `file_size(path)`        | Get the size of the file.                                                               | `path`: File path (String)                                                                      | Scalar Function    |
-| `file_last_modified(path)`| Get the last modified time of the file.                                                | `path`: File path (String)                                                                      | Scalar Function    |
-| `absolute_path(path)`    | Get the absolute path of the file.                                                      | `path`: File path (String)                                                                      | Scalar Function    |
-| `path_exists(path)`      | Check if the path exists.                                                               | `path`: File or directory path (String)                                                         | Scalar Function    |
-| `path_type(path)`        | Get the type of the path (file or directory).                                           | `path`: File or directory path (String)                                                         | Scalar Function    |
-| `hsize(bytes)`           | Format file size in human-readable form.                                                | `bytes`: Number of bytes (Integer)                                                              | Scalar Function    |
+### Scalar Functions
+| **Function**          | **Description**                                            | **Parameters**                     |
+|------------------------|------------------------------------------------------------|-------------------------------------|
+| `pwd()`               | Get the current working directory.                         | `path`: File path (String)                               |
+| `is_file(path)`       | Check if the given path is a file.                         | `path`: File path (String)          |
+| `is_dir(path)`        | Check if the given path is a directory.                    | `path`: Directory path (String)     |
+| `file_name(path)`     | Get the file name from the path.                           | `path`: File path (String)          |
+| `file_extension(path)`| Get the file extension from the path.                      | `path`: File path (String)          |
+| `file_size(path)`     | Get the size of the file (in bytes).                       | `path`: File path (String)          |
+| `file_last_modified(path)`| Get the last modified time of the file.               | `path`: File path (String)          |
+| `absolute_path(path)` | Get the absolute path of the file or directory.            | `path`: File path (String)          |
+| `path_exists(path)`   | Check if the given path exists.                            | `path`: File or directory path (String) |
+| `path_type(path)`     | Determine the type of the path (file or directory).        | `path`: File or directory path (String) |
+| `hsize(bytes)`        | Format file size into a human-readable form (e.g., KB, MB).| `bytes`: Number of bytes (Integer)  |
 
+---
+
+### Table Functions
+| **Function**            | **Description**                                                                                | **Parameters**                                                                                                                                                                              |
+|--------------------------|------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `cd(path)`              | Change the current working directory.                                                         | `path`: Target directory path (String)                                                                                                                                                      |
+| `ls(path, skip_permission_denied)`| List files in a directory. Defaults to the current directory if `path` is not provided.                          | `path` (optional): Directory path (String), default is `pwd`<br>`skip_permission_denied` (optional): Boolean, default is `true`                                                             |
+| `lsr(path, depth, skip_permission_denied)`| List files in a directory recursively. Defaults to no depth limit and the current directory.            | `path` (optional): Directory path (String), default is `pwd`<br>`depth` (optional): default is `-1`, which is no limit (Integer) <br>`skip_permission_denied` (optional): default is `true` |
+
+---
 ## Building
 
 ### Build steps

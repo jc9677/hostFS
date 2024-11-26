@@ -123,6 +123,9 @@ namespace duckdb {
         TableFunction list_dir_one_arg({LogicalType::VARCHAR}, ListDirRecursiveFun, ListDirBind, ListDirRecursiveState::Init);
         list_dir_set.AddFunction(list_dir_one_arg);
 
+        TableFunction list_dir_two_arg({LogicalType::VARCHAR, LogicalType::BOOLEAN}, ListDirRecursiveFun, ListDirBind, ListDirRecursiveState::Init);
+        list_dir_set.AddFunction(list_dir_two_arg);
+
         ExtensionUtil::RegisterFunction(instance, list_dir_set);
 
 
@@ -136,6 +139,9 @@ namespace duckdb {
 
         TableFunction list_dir_recursive_two_args({LogicalType::VARCHAR, LogicalType::INTEGER}, ListDirRecursiveFun, ListDirRecursiveBind, ListDirRecursiveState::Init);
         list_dir_recursive_set.AddFunction(list_dir_recursive_two_args);
+
+        TableFunction list_dir_recursive_tree_args({LogicalType::VARCHAR, LogicalType::INTEGER, LogicalType::BOOLEAN}, ListDirRecursiveFun, ListDirRecursiveBind, ListDirRecursiveState::Init);
+        list_dir_recursive_set.AddFunction(list_dir_recursive_tree_args);
 
         ExtensionUtil::RegisterFunction(instance, list_dir_recursive_set);
 

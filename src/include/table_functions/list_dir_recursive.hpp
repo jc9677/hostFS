@@ -24,11 +24,13 @@ namespace duckdb {
 
         string directory;
         int depth; // -1 for infinite depth, 0 for no recursion
+        bool skip_permission_denied;
 
-        explicit ListDirRecursiveFunctionData(string directory, int depth) : directory(std::move(directory)), depth(depth) {}
+        explicit ListDirRecursiveFunctionData(string directory, int depth, bool skip_permission_denied) : directory(
+                std::move(directory)), depth(depth), skip_permission_denied(skip_permission_denied) {}
 
         unique_ptr<FunctionData> Copy() const override {
-            return make_uniq<ListDirRecursiveFunctionData>(directory, depth);
+            return make_uniq<ListDirRecursiveFunctionData>(directory, depth, skip_permission_denied);
         }
 
         bool Equals(const FunctionData &other) const override {
@@ -58,47 +60,69 @@ namespace duckdb {
         // if no arguments are provided, use the current working directory
         string directory = ".";
         int depth = -1;
+        bool skip_permission_denied = true;
         if (input.inputs.size() == 1) {
             directory = input.inputs[0].GetValue<string>();
         } else if (input.inputs.size() == 2) {
             directory = input.inputs[0].GetValue<string>();
             depth = input.inputs[1].GetValue<int>();
+        } else if (input.inputs.size() == 3) {
+            directory = input.inputs[0].GetValue<string>();
+            depth = input.inputs[1].GetValue<int>();
+            skip_permission_denied = input.inputs[2].GetValue<bool>();
         }
 
-        auto data = make_uniq<ListDirRecursiveFunctionData>(directory, depth);
+        auto data = make_uniq<ListDirRecursiveFunctionData>(directory, depth, skip_permission_denied);
         return std::move(data);
     }
 
     static unique_ptr<FunctionData> ListDirBind(ClientContext &context, TableFunctionBindInput &input,
-                                                         vector<LogicalType> &return_types, vector<string> &names) {
+                                                vector<LogicalType> &return_types, vector<string> &names) {
         names.emplace_back("path");
         return_types.emplace_back(LogicalType::VARCHAR);
 
         // if no arguments are provided, use the current working directory
         string directory = ".";
-        int depth = 0;
+        bool skip_permission_denied = true;
         if (input.inputs.size() == 1) {
             directory = input.inputs[0].GetValue<string>();
+        } else if (input.inputs.size() == 2) {
+            directory = input.inputs[0].GetValue<string>();
+            skip_permission_denied = input.inputs[1].GetValue<bool>();
         }
 
-        auto data = make_uniq<ListDirRecursiveFunctionData>(directory, depth);
+        auto data = make_uniq<ListDirRecursiveFunctionData>(directory, 0, skip_permission_denied);
         return std::move(data);
     }
 
-    void ListDirectoryRecursive(const std::string &directory, std::vector<std::string> &paths, int current_depth = 0, int max_depth = -1) {
-        // Stop recursion if max_depth is reached and not -1
-        if (max_depth != -1 && current_depth > max_depth) {
-            return;
-        }
-
-        for (const auto &entry : fs::directory_iterator(directory)) {
-            // Add the current path to the vector
-            paths.push_back(entry.path().string());
-
-            // Recursively go into directories if applicable
-            if (entry.is_directory()) {
-                ListDirectoryRecursive(entry.path().string(), paths, current_depth + 1, max_depth);
+    void ListDirectoryRecursive(const std::string &directory, std::vector<std::string> &paths, int max_depth, bool skip_permission_denied) {
+        try {
+            // Check if the directory exists and is valid
+            if (!fs::exists(directory) ){
+                throw IOException("Directory does not exist: " + directory);
+            } else if (!fs::is_directory(directory)) {
+                throw IOException("Path is not a directory: " + directory);
             }
+
+            auto options = fs::directory_options::none;
+            if (skip_permission_denied) {
+                options = fs::directory_options::skip_permission_denied;
+            }
+
+            fs::recursive_directory_iterator it(directory, options), end;
+            while (it != end) {
+                // Skip entries that exceed the max depth if max_depth is set
+                if (max_depth != -1 && it.depth() > max_depth) {
+                    it.disable_recursion_pending(); // Prevent descending further into this directory
+                } else {
+                    // Add the current path to the vector
+                    paths.push_back(it->path().string());
+                }
+
+                ++it; // Move to the next entry
+            }
+        } catch (const std::exception &ex) {
+            throw IOException(ex.what());
         }
     }
 
@@ -108,13 +132,14 @@ namespace duckdb {
         auto &function_data = data_p.bind_data->Cast<ListDirRecursiveFunctionData>();
         auto directory = function_data.directory;
         auto depth = function_data.depth;
+        auto skip_permission_denied = function_data.skip_permission_denied;
 
         auto &state = data_p.global_state->Cast<ListDirRecursiveState>();
 
         // gather the paths if not already done
         if (!state.gathered_paths.exchange(true)) {
             // first call, gather the paths
-            ListDirectoryRecursive(directory, state.paths, 0, depth);
+            ListDirectoryRecursive(directory, state.paths, depth, skip_permission_denied);
         }
 
         // we can max return STANDARD_VECTOR_SIZE paths at a time
@@ -133,6 +158,8 @@ namespace duckdb {
 
         // update the current index
         state.current_idx += count;
+
+
     }
 
 }
