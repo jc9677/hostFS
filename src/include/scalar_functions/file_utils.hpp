@@ -38,36 +38,54 @@ namespace duckdb {
 
     static void IsFileScalarFun(DataChunk &input, ExpressionState &state, Vector &result) {
         auto &path_vector = input.data[0];
-        UnaryExecutor::Execute<string_t, bool>(
+        UnaryExecutor::ExecuteWithNulls<string_t, bool>(
                 path_vector, result, input.size(),
-                [&](string_t path) {
+                [&](string_t path, ValidityMask &mask, idx_t idx) {
+                    if (!fs::exists(path.GetString())) {
+                        mask.SetInvalid(idx);
+                        return false;
+                    }
                     return fs::is_regular_file(path.GetString());
                 });
     }
 
     static void IsDirectoryScalarFun(DataChunk &input, ExpressionState &state, Vector &result) {
         auto &path_vector = input.data[0];
-        UnaryExecutor::Execute<string_t, bool>(
+        UnaryExecutor::ExecuteWithNulls<string_t, bool>(
                 path_vector, result, input.size(),
-                [&](string_t path) {
+                [&](string_t path, ValidityMask &mask, idx_t idx) {
+                    if (!fs::exists(path.GetString())) {
+                        mask.SetInvalid(idx);
+                        return false;
+                    }
                     return fs::is_directory(path.GetString());
                 });
     }
 
     static void GetFilenameScalarFun(DataChunk &input, ExpressionState &state, Vector &result) {
         auto &path_vector = input.data[0];
-        UnaryExecutor::Execute<string_t, string_t>(
+        UnaryExecutor::ExecuteWithNulls<string_t, string_t>(
                 path_vector, result, input.size(),
-                [&](string_t path) {
+                [&](string_t path, ValidityMask &mask, idx_t idx) {
+                    if (!fs::exists(path.GetString())) {
+                        mask.SetInvalid(idx);
+                        const string_t empty_string("");
+                        return empty_string;
+                    }
                     return StringVector::AddString(result, fs::path(path.GetString()).filename().string());
                 });
     }
 
     static void GetFileExtensionScalarFun(DataChunk &input, ExpressionState &state, Vector &result) {
         auto &path_vector = input.data[0];
-        UnaryExecutor::Execute<string_t, string_t>(
+        UnaryExecutor::ExecuteWithNulls<string_t, string_t>(
                 path_vector, result, input.size(),
-                [&](string_t path) {
+                [&](string_t path, ValidityMask &mask, idx_t idx) {
+                    if (!fs::exists(path.GetString())) {
+                        mask.SetInvalid(idx);
+                        const string_t empty_string("");
+                        return empty_string;
+                    }
                     std::string path_str = path.GetString();
                     if (fs::is_directory(path_str)) {
                         return StringVector::AddString(result, "");
@@ -79,9 +97,15 @@ namespace duckdb {
 
     static void GetFileSizeScalarFun(DataChunk &input, ExpressionState &state, Vector &result) {
         auto &path_vector = input.data[0];
-        UnaryExecutor::Execute<string_t, uint64_t>(
+        UnaryExecutor::ExecuteWithNulls<string_t, uint64_t>(
                 path_vector, result, input.size(),
-                [&](string_t path) {
+                [&](string_t path, ValidityMask &mask, idx_t idx) {
+
+                    // check if the path exists
+                    if (!fs::exists(path.GetString())) {
+                        mask.SetInvalid(idx);
+                        return static_cast<uint64_t>(0);
+                    }
 
                     // return 0 if dir
                     if (fs::is_directory(path.GetString())) {
@@ -101,9 +125,16 @@ namespace duckdb {
 
     static void GetPathAbsoluteScalarFun(DataChunk &input, ExpressionState &state, Vector &result) {
         auto &path_vector = input.data[0];
-        UnaryExecutor::Execute<string_t, string_t>(
+        UnaryExecutor::ExecuteWithNulls<string_t, string_t>(
                 path_vector, result, input.size(),
-                [&](string_t path) {
+                [&](string_t path, ValidityMask &mask, idx_t idx) {
+
+                    if (!fs::exists(path.GetString())) {
+                        mask.SetInvalid(idx);
+                        const string_t empty_string("");
+                        return empty_string;
+                    }
+
                     // get the absolute path without any '/./' or '/../' components
                     auto abs_path = fs::absolute(path.GetString());
 
@@ -128,9 +159,17 @@ namespace duckdb {
 
     static void GetPathTypeScalarFun(DataChunk &input, ExpressionState &state, Vector &result) {
         auto &path_vector = input.data[0];
-        UnaryExecutor::Execute<string_t, string_t>(
+        UnaryExecutor::ExecuteWithNulls<string_t, string_t>(
                 path_vector, result, input.size(),
-                [&](string_t path) {
+                [&](string_t path, ValidityMask &mask, idx_t idx) {
+
+                    // check if the path exists
+                    if (!fs::exists(path.GetString())) {
+                        mask.SetInvalid(idx);
+                        const string_t empty_string("");
+                        return empty_string;
+                    }
+
                     std::string path_str = path.GetString(); // Convert string_t to std::string
                     if (fs::is_directory(path_str)) {
                         return StringVector::AddString(result, "directory");

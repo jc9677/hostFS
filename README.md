@@ -66,6 +66,8 @@ D SELECT n_rows, std, n_duplicates FROM './sketch_results.csv' LIMIT 4;
 ## Functions Overview
 
 ### Scalar Functions
+> All path functions like `is_dir(path)` return `NULL` if the path does not exist! 
+ 
 | **Function**          | **Description**                                            | **Parameters**                     |
 |------------------------|------------------------------------------------------------|-------------------------------------|
 | `pwd()`               | Get the current working directory.                         | `path`: File path (String)                               |
